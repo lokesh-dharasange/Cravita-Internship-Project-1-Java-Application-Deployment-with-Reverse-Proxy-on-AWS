@@ -1,71 +1,97 @@
-
 # Cravita Internship – Project 1: Java Application Deployment with Reverse Proxy on AWS
 
 ## 📌 Project Overview
 
 This project demonstrates the deployment of a Java Student Registration Web Application on AWS using two Linux EC2 instances, Apache Tomcat, Nginx Reverse Proxy, and Amazon RDS MySQL.
 
-The application is deployed as a WAR file on the backend EC2 instance and is accessed publicly only through the Nginx reverse proxy server.
+The Java application is deployed as a WAR file on the backend EC2 instance and is accessed publicly through the Nginx Reverse Proxy.
 
 ---
 
-# 🏗️ Architecture Diagram
+## 🏗️ AWS Architecture Diagram
 
-```mermaid
-flowchart LR
+![AWS Architecture Diagram](screenshots/aws-architecture-diagram.png)
 
-A[User Browser]
-
-B[Nginx Reverse Proxy EC2]
-
-C[Apache Tomcat EC2]
-
-D[(Amazon RDS MySQL)]
-
-A -->|HTTP :80| B
-
-B -->|Private IP :8080| C
-
-C -->|JDBC :3306| D
-```
-
----
-
-# 🔄 Traffic Flow
+### Architecture Flow
 
 ```text
-User Browser
-      │
-      │ HTTP :80
-      ▼
-Nginx Reverse Proxy
-      │
-      │ Private IP :8080
-      ▼
-Apache Tomcat
-      │
-      │ JDBC :3306
-      ▼
-Amazon RDS MySQL
+                    ┌─────────────────────┐
+                    │    User / Browser   │
+                    └──────────┬──────────┘
+                               │
+                         HTTP :80
+                               │
+                               ▼
+              ┌─────────────────────────────┐
+              │     Reverse Proxy EC2      │
+              │          Nginx             │
+              │                            │
+              │ Public IP: 3.85.90.108    │
+              │ Private IP: 172.31.92.122 │
+              │ Port: 80                   │
+              └──────────────┬──────────────┘
+                             │
+                       Private IP :8080
+                             │
+                             ▼
+              ┌─────────────────────────────┐
+              │        Backend EC2         │
+              │      Apache Tomcat 9       │
+              │                            │
+              │ student.war                │
+              │                            │
+              │ Public IP: 54.91.220.81    │
+              │ Private IP: 172.31.20.55  │
+              │ Port: 8080                 │
+              └──────────────┬──────────────┘
+                             │
+                         JDBC :3306
+                             │
+                             ▼
+              ┌─────────────────────────────┐
+              │       Amazon RDS MySQL     │
+              │                            │
+              │ Database: studentdb        │
+              │ Table: students            │
+              │ Port: 3306                 │
+              └─────────────────────────────┘
+
+      Direct Backend Access :8080
+                    │
+                    X
+                 BLOCKED
 ```
 
 ---
 
-# 🎯 Project Objectives
+## 🔄 Application Flow
 
-- Deploy Java WAR application on AWS EC2
-- Host application using Apache Tomcat
-- Configure Amazon RDS MySQL
-- Install MySQL Connector/J
-- Configure Nginx Reverse Proxy
-- Restrict backend access using Security Groups
-- Access application only through Nginx
+1. User opens the public application URL.
+2. Request reaches the Nginx Reverse Proxy EC2 on HTTP Port 80.
+3. Nginx forwards the request to the Backend EC2 using its private IP on Port 8080.
+4. Apache Tomcat processes the Java application.
+5. The Java application connects to Amazon RDS MySQL using JDBC.
+6. Student data is stored and retrieved from the `students` table.
+7. Response is returned to the user through Nginx.
 
 ---
 
-# ☁️ AWS Infrastructure
+## 🎯 Project Objectives
 
-## Backend EC2
+- Deploy a Java WAR-based web application on AWS.
+- Configure Apache Tomcat as the application server.
+- Integrate the application with Amazon RDS MySQL.
+- Configure MySQL Connector/J.
+- Configure Nginx as a Reverse Proxy.
+- Use private IP communication between Reverse Proxy and Backend EC2.
+- Restrict direct public access to the backend application.
+- Provide public access through the Reverse Proxy.
+
+---
+
+## ☁️ AWS Infrastructure
+
+### Backend EC2
 
 | Property | Value |
 |---|---|
@@ -75,9 +101,9 @@ Amazon RDS MySQL
 | Public IP | 54.91.220.81 |
 | Private IP | 172.31.20.55 |
 | Application Server | Apache Tomcat 9 |
-| Port | 8080 |
+| Application Port | 8080 |
 
-## Reverse Proxy EC2
+### Reverse Proxy EC2
 
 | Property | Value |
 |---|---|
@@ -87,41 +113,41 @@ Amazon RDS MySQL
 | Public IP | 3.85.90.108 |
 | Private IP | 172.31.92.122 |
 | Web Server | Nginx |
-| Port | 80 |
+| Public Port | 80 |
 
 ---
 
-# ☕ Java Application Deployment
+## ☕ Java Application
 
-**Application:** `student.war`
+Application:
+
+`student.war`
 
 Deployment location:
 
-```text
-/opt/tomcat/webapps/student.war
-```
+`/opt/tomcat/webapps/student.war`
 
-Tomcat extracted application:
+After deployment:
 
-```text
-/opt/tomcat/webapps/student/
-```
+`/opt/tomcat/webapps/student/`
 
 Application Context:
 
-```text
-/student
-```
+`/student`
+
+The application is a Java Servlet/JSP based Student Registration Web Application.
 
 ---
 
-# 🐱 Apache Tomcat
+## 🐱 Apache Tomcat
 
-Tomcat Installation:
+Tomcat installation directory:
 
-```text
-/opt/tomcat
-```
+`/opt/tomcat`
+
+Tomcat runs on:
+
+`Port 8080`
 
 Start Tomcat:
 
@@ -130,17 +156,15 @@ cd /opt/tomcat
 sudo ./bin/startup.sh
 ```
 
-Verify:
+Verify Tomcat:
 
 ```bash
 ps aux | grep tomcat
 ```
 
-Tomcat runs on **Port 8080**.
-
 ---
 
-# 🗄️ Amazon RDS MySQL
+## 🗄️ Amazon RDS MySQL
 
 | Property | Value |
 |---|---|
@@ -148,16 +172,15 @@ Tomcat runs on **Port 8080**.
 | Database | studentdb |
 | Username | admin |
 | Port | 3306 |
-
-RDS Endpoint:
-
-```text
-student-db.c41mk4mean95.us-east-1.rds.amazonaws.com
-```
+| Endpoint | student-db.c41mk4mean95.us-east-1.rds.amazonaws.com |
 
 ---
 
-# 📋 Database Schema
+## 📋 Database Table
+
+The application uses the `students` table.
+
+DDL:
 
 ```sql
 CREATE TABLE students (
@@ -173,36 +196,35 @@ CREATE TABLE students (
 
 ---
 
-# 🔍 Database Verification
+## 🔍 Database Verification
+
+Select the database:
 
 ```sql
 USE studentdb;
+```
 
+Check student records:
+
+```sql
 SELECT * FROM students;
 ```
 
-Sample Records:
-
-| ID | Name | Address | Age | Qualification | Percentage | Year |
-|---|---|---|---|---|---|---|
-| 1 | Lokesh | Pune | 22 | BCA | 8.46 | 2025 |
-| 2 | John | Pune | 22 | BCA | 8.01 | 2025 |
+The application successfully stores and retrieves student registration data from Amazon RDS MySQL.
 
 ---
 
-# 🔌 MySQL Connector/J
+## 🔌 MySQL Connector/J
 
-Connector File:
+MySQL Connector/J is used by Tomcat to connect the Java application with Amazon RDS MySQL.
 
-```text
-mysql-connector-j-26.7.0.jar
-```
+Connector file:
+
+`mysql-connector-j-26.7.0.jar`
 
 Location:
 
-```text
-/opt/tomcat/lib/mysql-connector-j-26.7.0.jar
-```
+`/opt/tomcat/lib/mysql-connector-j-26.7.0.jar`
 
 Verify:
 
@@ -212,45 +234,37 @@ ls -lh /opt/tomcat/lib/mysql-connector-j-26.7.0.jar
 
 ---
 
-# 🔗 Tomcat JNDI Configuration
+## 🔗 Tomcat JNDI DataSource
 
-File:
+Tomcat JNDI DataSource is configured using the resource name:
 
-```text
-/opt/tomcat/conf/context.xml
-```
+`jdbc/TestDB`
 
-Configuration:
+Configuration file:
 
-```xml
-<Context>
+`/opt/tomcat/conf/context.xml`
 
-<Resource
-name="jdbc/TestDB"
-auth="Container"
-type="javax.sql.DataSource"
-driverClassName="com.mysql.cj.jdbc.Driver"
-url="jdbc:mysql://student-db.c41mk4mean95.us-east-1.rds.amazonaws.com:3306/studentdb"
-username="admin"
-password="YOUR_DATABASE_PASSWORD"
-maxTotal="20"
-maxIdle="10"
-maxWaitMillis="-1"/>
+The DataSource uses:
 
-</Context>
-```
+- MySQL JDBC Driver
+- Amazon RDS endpoint
+- Database `studentdb`
+- Username `admin`
+- JNDI name `jdbc/TestDB`
 
-> Database password is intentionally hidden.
+Database password is intentionally not included in this repository.
 
 ---
 
-# 🌐 Nginx Reverse Proxy
+## 🌐 Nginx Reverse Proxy
 
-Configuration File:
+Nginx is configured on the Reverse Proxy EC2 instance.
 
-```text
-/etc/nginx/sites-available/student
-```
+Configuration file:
+
+`/etc/nginx/sites-available/student`
+
+Configuration:
 
 ```nginx
 server {
@@ -268,7 +282,13 @@ server {
 }
 ```
 
-Enable Configuration:
+The Reverse Proxy forwards requests to the backend using the backend EC2 private IP:
+
+`172.31.20.55:8080`
+
+---
+
+## 🔗 Enable Nginx Configuration
 
 ```bash
 sudo ln -s /etc/nginx/sites-available/student /etc/nginx/sites-enabled/student
@@ -276,198 +296,227 @@ sudo ln -s /etc/nginx/sites-available/student /etc/nginx/sites-enabled/student
 
 ---
 
-# ✅ Nginx Validation
+## ✅ Nginx Configuration Test
+
+Run:
 
 ```bash
 sudo nginx -t
 ```
 
-Expected Output:
+Expected result:
 
-```text
-nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
-nginx: configuration file /etc/nginx/nginx.conf test is successful
-```
+`syntax is ok`
 
-Check Service:
+`test is successful`
+
+Check Nginx:
 
 ```bash
 sudo systemctl status nginx
 ```
 
-Status:
+Expected status:
 
-```text
-Active: active (running)
-```
+`active (running)`
 
 ---
 
-# 🔐 Security Configuration
+## 🔐 Security Group Configuration
 
-## Reverse Proxy EC2
+### Reverse Proxy EC2 Security Group
 
-Allowed Ports:
+| Type | Port | Source |
+|---|---:|---|
+| SSH | 22 | My IP |
+| HTTP | 80 | 0.0.0.0/0 |
 
-- SSH (22)
-- HTTP (80)
+### Backend EC2 Security Group
 
-## Backend EC2
+| Type | Port | Source |
+|---|---:|---|
+| SSH | 22 | My IP |
+| HTTP | 80 | 0.0.0.0/0 |
+| HTTPS | 443 | 0.0.0.0/0 |
+| Custom TCP | 8080 | Reverse Proxy Security Group |
 
-Allowed Ports:
+The backend Tomcat Port 8080 is allowed only from the Reverse Proxy Security Group.
 
-- SSH (22)
-- HTTP (80)
-- HTTPS (443)
-- Tomcat (8080) **Only from Reverse Proxy Security Group**
+Therefore, users cannot directly access the backend application from the Internet.
 
-Architecture:
+---
+
+## 🛡️ Security Architecture
 
 ```text
 Internet
     │
-    │ Port 80
+    │ HTTP :80
     ▼
 Nginx Reverse Proxy
     │
     │ Private IP :8080
     ▼
-Apache Tomcat
+Backend Apache Tomcat
+    │
+    │ JDBC :3306
+    ▼
+Amazon RDS MySQL
 ```
 
-Direct backend access is blocked.
+Direct backend access is blocked:
 
-Blocked URL:
-
-```text
-http://54.91.220.81:8080/student/
-```
+`http://54.91.220.81:8080/student/`
 
 Result:
 
-```text
-ERR_CONNECTION_TIMED_OUT
-```
+`ERR_CONNECTION_TIMED_OUT`
 
 ---
 
-# 🌍 Final Application URL
+## 🌍 Final Application URL
 
-Student Registration:
+The application is publicly accessible through the Nginx Reverse Proxy:
 
-```text
-http://3.85.90.108/student/
-```
+`http://3.85.90.108/student/`
 
 Students List:
 
-```text
-http://3.85.90.108/student/viewStudents
-```
+`http://3.85.90.108/student/viewStudents`
 
 ---
 
-# 🧪 Testing Performed
+## 🧪 Testing
 
-## Test 1 – Tomcat
+### 1. Tomcat Running
 
 ```bash
 ps aux | grep tomcat
 ```
 
-Result: Tomcat Running
+Result:
 
-## Test 2 – WAR Deployment
+Tomcat running successfully.
+
+### 2. WAR Deployment
 
 ```bash
 ls /opt/tomcat/webapps/
 ```
 
-Result:
+Expected:
 
-- student.war
-- student/
+`student.war`
 
-## Test 3 – Database
+`student/`
 
-```sql
-SELECT * FROM students;
-```
+### 3. Backend Application Test
 
-Result: Student records displayed successfully.
+Backend application runs internally on:
 
-## Test 4 – Nginx
+`172.31.20.55:8080`
+
+### 4. Nginx Test
 
 ```bash
 sudo nginx -t
 ```
 
-Result: Configuration successful.
+Result:
 
-## Test 5 – Backend Connectivity
+Nginx configuration successful.
 
-```bash
-curl -I http://172.31.20.55:8080/student/
+### 5. Database Test
+
+```sql
+SELECT * FROM students;
 ```
 
 Result:
 
-```text
-HTTP/1.1 200 OK
-```
+Student records displayed successfully.
 
-## Test 6 – Public Access
+### 6. Final Application Test
 
-```text
-http://3.85.90.108/student/
-```
-
-Result: Application working successfully.
-
-## Test 7 – Backend Security
-
-```text
-http://54.91.220.81:8080/student/
-```
+`http://3.85.90.108/student/`
 
 Result:
 
-```text
-Connection Timed Out
-```
+Student Registration Application working successfully.
+
+### 7. Direct Backend Test
+
+`http://54.91.220.81:8080/student/`
+
+Result:
+
+Direct backend access blocked.
 
 ---
 
-# 📸 Screenshots
+## 📸 Project Screenshots
 
-Place the following images inside a folder named **screenshots**.
+The following screenshots provide evidence of the project implementation.
 
-```text
-screenshots/
-│
-├── 01-ec2-instances.png
-├── 02-tomcat-running.png
-├── 03-war-deployment.png
-├── 04-database-table.png
-├── 05-database-records.png
-├── 06-mysql-connector.png
-├── 07-nginx-config.png
-├── 08-nginx-test.png
-├── 09-nginx-service.png
-├── 10-student-registration.png
-├── 11-students-list.png
-└── 12-backend-blocked.png
-```
+### AWS EC2 Instances
+
+![EC2 Instances](screenshots/01-ec2-instances.png)
+
+### Tomcat Running
+
+![Tomcat Running](screenshots/02-tomcat-running.png)
+
+### WAR Deployment
+
+![WAR Deployment](screenshots/03-war-deployment.png)
+
+### Database Table
+
+![Database Table](screenshots/04-database-table.png)
+
+### Database Records
+
+![Database Records](screenshots/05-database-records.png)
+
+### MySQL Connector/J
+
+![MySQL Connector](screenshots/06-mysql-connector.png)
+
+### Nginx Configuration
+
+![Nginx Configuration](screenshots/07-nginx-config.png)
+
+### Nginx Test
+
+![Nginx Test](screenshots/08-nginx-test.png)
+
+### Nginx Service
+
+![Nginx Service](screenshots/09-nginx-service.png)
+
+### Student Registration Application
+
+![Student Registration](screenshots/10-student-registration.png)
+
+### Students List
+
+![Students List](screenshots/11-students-list.png)
+
+### Backend Direct Access Blocked
+
+![Backend Blocked](screenshots/12-backend-blocked.png)
 
 ---
 
-# 🛠️ Technologies Used
+## 🛠️ Technologies Used
 
 - Amazon EC2
 - Amazon RDS MySQL
 - Ubuntu Linux
+- Java
+- Servlet
+- JSP
 - Apache Tomcat 9
-- Java Servlet & JSP
 - JDBC
 - MySQL Connector/J
 - Nginx
@@ -476,25 +525,28 @@ screenshots/
 
 ---
 
-# 📊 Project Outcome
+## 📊 Project Outcome
 
-The project was successfully completed with:
+The Java Student Registration Web Application was successfully deployed on AWS.
 
-- Two EC2 instances
-- Apache Tomcat deployment
-- Java WAR application
-- Amazon RDS MySQL integration
-- MySQL Connector/J configuration
+The final architecture provides:
+
+- Two Linux EC2 instances
 - Nginx Reverse Proxy
+- Apache Tomcat backend
+- Java WAR deployment
+- Amazon RDS MySQL database
+- JDBC database connectivity
+- MySQL Connector/J
 - Private IP communication
-- Security Group restriction
-- Public access through Nginx
+- Security Group based backend restriction
+- Public application access through Nginx
 - Successful student registration
 - Successful database storage and retrieval
 
 ---
 
-# 👨‍💻 Internship Details
+## 👨‍💻 Internship Details
 
 **Organization:** Cravita Technology
 
@@ -502,6 +554,6 @@ The project was successfully completed with:
 
 **Project:** Project 1
 
-**Title:** Java Application Deployment with Reverse Proxy on AWS
+**Project Title:** Java Application Deployment with Reverse Proxy on AWS
 
 **Author:** Lokesh Dharasange
