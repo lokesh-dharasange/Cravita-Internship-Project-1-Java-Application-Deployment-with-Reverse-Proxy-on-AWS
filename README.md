@@ -218,7 +218,7 @@ This allows Tomcat and the Java application to communicate with Amazon RDS MySQL
 
 ---
 
-## 📸 Database / Connector Evidence
+## 📸 Database Table Evidence
 
 ![Database Table](screenshots/database-table.png)
 
